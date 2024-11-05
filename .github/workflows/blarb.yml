@@ -10,9 +10,25 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history including tags
 
+      - name: Check Recent Commits (git log)
+        run: |
+          echo "Recent commits in the last 7 days:"
+          git log --since="7 days ago"
+
+      - name: Debug Shortlog
+        run: |
+          echo "Shortlog for the last 7 days:"
+          git shortlog -n -s --since="7 days ago"
+          
       - name: Get First Author
         run: |
-          FIRST_AUTHOR=$(git shortlog -n -s --since="7 days ago" | awk '{$1=""; sub(/^ /, ""); print $0}' | head -n 1)
-          echo "First author in the last 7 days: $FIRST_AUTHOR"
+          echo "Calculating first author from the last 7 days..."
+          FIRST_AUTHOR=$(git log --since="7 days ago" --pretty=format:"%an" | sort | uniq -c | sort -nr | head -n 1)
+          # Extract the number and the name separately
+          COUNT=$(echo $FIRST_AUTHOR | awk '{print $1}')
+          NAME=$(echo $FIRST_AUTHOR | cut -d ' ' -f2-)
+          echo "First author in the last 7 days: $NAME (Commits: $COUNT)"
